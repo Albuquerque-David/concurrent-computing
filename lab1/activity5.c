@@ -42,7 +42,10 @@ int main(void) {
         arg->array = array;
         
         if (pthread_create(&tid_sistema[thread], NULL, incrementArray, (void*) arg)) {
-            printf("Erro ao criar threads para a funcao incrementArray. \n"); exit(-1);
+            printf("Erro ao criar threads para a funcao incrementArray. \n");
+            exit(-1);
+        } else {
+            printf("Thread criada com sucesso. Tid: %ld\n", tid_sistema[thread]);
         }
 
     }
@@ -51,10 +54,15 @@ int main(void) {
     for (thread = 0; thread < NTHREADS; thread++) {
         if (pthread_join(tid_sistema[thread], NULL)) {
             printf("Erro ao aguardar as threads terminarem a execução. \n"); exit(-1); 
-        } 
+        } else {
+            printf("Thread finalizada com sucesso. Tid: %ld\n", tid_sistema[thread]);
+        }
     }
 
     checkArrayIncrement(array, ARRAY_SIZE);
+    printf("Encerrando o programa. O quadrado das posicoes do vetor foi calculado corretamente. \n");
+
+    return 0;
 }
 
 
