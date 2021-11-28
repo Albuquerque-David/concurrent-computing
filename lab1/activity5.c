@@ -18,7 +18,7 @@ typedef struct {
 
 void initializeArray(); // Funcao utilizada para inicializar o array a ser incrementado
 void *incrementArray(void *arg); // Funcao utilizada para incrementar o array de forma multi-thread
-int checkArrayIncrement(); // Funaao utilizada para checar se o incremento do array foi realizado corretamente. (single-thread)
+int checkArrayIncrement(); // Funcao utilizada para checar se o incremento do array foi realizado corretamente. (single-thread)
 
 // Funcao principal do programa
 int main(void) {
