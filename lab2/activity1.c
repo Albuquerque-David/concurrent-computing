@@ -39,13 +39,13 @@ int main(int argc, char *argv[])
 
     if (nthreads <= 0)
     {
-        printf("Entre com um numero positivo de threads.\n");
+        printf("Entre com um numero positivo de threads\n");
         exit(1);
     }
 
     if (dim <= 0)
     {
-        printf("Entre com um numero positivo de dimensão da matriz.\n");
+        printf("Entre com um numero positivo de dimensão da matriz\n");
         exit(1);
     }
 
@@ -57,14 +57,14 @@ int main(int argc, char *argv[])
     tid = (pthread_t *)malloc(sizeof(pthread_t) * nthreads);
     if (tid == NULL)
     {
-        puts("Erro ao alocar tid.\n");
+        puts("Erro ao alocar tid\n");
         return 2;
     }
 
     args = (tArgs *)malloc(sizeof(tArgs) * nthreads);
     if (args == NULL)
     {
-        puts("Erro ao alocar args.\n");
+        puts("Erro ao alocar args\n");
         return 2;
     }
 
@@ -79,21 +79,21 @@ int main(int argc, char *argv[])
 
     GET_TIME(end);
     delta = end - start;
-    printf("O multiplicacao sequencial levou: %lf\n", delta);
+    printf("A multiplicacao sequencial levou: %lf ms\n", delta);
 
     GET_TIME(start);
 
     for(int thread = 0; thread < nthreads; thread++) {
         
-        (args + thread)->start = thread * ((dim * dim) / nthreads); // De onde a thread iniciará o calculo, alocando dinamicamente de acordo com a quantidade de threads e tamanho do array.
-        (args + thread)->end = (thread * ((dim * dim) / nthreads)) + ((dim * dim) / nthreads); // Onde a thread terminará o calculo, alocando dinamicamente de acordo com a quantidade de threads e tamanho do array.
+        (args + thread)->start = thread * ((dim) / nthreads); // De onde a thread iniciará o calculo, alocando dinamicamente de acordo com a quantidade de threads e tamanho do array
+        (args + thread)->end = (thread * ((dim) / nthreads)) + ((dim) / nthreads); // Onde a thread terminará o calculo, alocando dinamicamente de acordo com a quantidade de threads e tamanho do array
         (args + thread)->id = thread;
         
         if (pthread_create(tid + thread, NULL, multiplyMatrixsConcurrently, (void*) (args + thread))) {
-            printf("Erro ao criar threads para a funcao multiplyMatrixsConcurrently. \n");
+            printf("Erro ao criar threads para a funcao multiplyMatrixsConcurrently\n");
             exit(-1);
         } else {
-            printf("Thread criada com sucesso. Tid: %ld\n",*(tid + thread));
+            //printf("Thread criada com sucesso. Tid: %ld\n",*(tid + thread));
         }
 
     }
@@ -101,18 +101,31 @@ int main(int argc, char *argv[])
     // Aguarda as threads finalizarem
     for (int thread = 0; thread < nthreads; thread++) {
         if (pthread_join(*(tid + thread), NULL)) {
-            printf("Erro ao aguardar as threads terminarem a execução. \n"); 
+            printf("Erro ao aguardar as threads terminarem a execução\n"); 
             exit(-1); 
         } else {
-            printf("Thread finalizada com sucesso. Tid: %ld\n", *(tid + thread));
+            //printf("Thread finalizada com sucesso. Tid: %ld\n", *(tid + thread));
         }
     }
 
     GET_TIME(end);
     delta = end - start;
-    printf("O multiplicacao concorrente levou: %lf\n", delta);
+    printf("A multiplicacao concorrente levou: %lf ms\n", delta);
 
-    printMatrixs();
+    // checando resultado
+
+    GET_TIME(start);
+
+    int isWrong = checkMatrixMultiplication();
+    if(isWrong){
+        printf("Erro no calculo da matriz\n");
+    } else {
+        printf("O resultado do calculo esta correto\n");
+    }
+
+    GET_TIME(end);
+    delta = end - start;
+    printf("A checagem do resultado levou: %lf ms\n", delta);
     
     //liberacao de memoria
     GET_TIME(start);
@@ -126,7 +139,7 @@ int main(int argc, char *argv[])
 
     GET_TIME(end);
     delta = end - start;
-    printf("A liberacao de memoria levou: %lf\n", delta);
+    printf("A liberacao de memoria levou: %lf ms\n", delta);
 
     return 0;
 }
@@ -134,25 +147,25 @@ int main(int argc, char *argv[])
 float *initializeMatrix(int randomNumber) {
     mat1 = (float *) malloc(sizeof(float) * dim * dim);
     if (mat1 == NULL) {
-        printf("Erro ao alocar matriz.\n"); 
+        printf("Erro ao alocar matriz\n"); 
         exit(2);
     }
 
     mat2 = (float *) malloc(sizeof(float) * dim * dim);
     if (mat2 == NULL) {
-        printf("Erro ao alocar matriz.\n"); 
+        printf("Erro ao alocar matriz\n"); 
         exit(2);
     }
 
     matSequential = (float *) malloc(sizeof(float) * dim * dim);
     if (matSequential == NULL) {
-        printf("Erro ao alocar matriz.\n"); 
+        printf("Erro ao alocar matriz\n"); 
         exit(2);
     }
 
     matConcurrent = (float *) malloc(sizeof(float) * dim * dim);
     if (matConcurrent == NULL) {
-        printf("Erro ao alocar matriz.\n"); 
+        printf("Erro ao alocar matriz\n"); 
         exit(2);
     }
 
@@ -199,6 +212,16 @@ void *multiplyMatrixsConcurrently(void *arg) {
 }
 
 int checkMatrixMultiplication(){
+
+    for(int i = 0; i < dim; i++) {
+        for(int j = 0; j < dim; j++) {
+            for(int k = 0; k < dim; k++) {
+                if(matSequential[i * dim + j] != matConcurrent[i * dim + j])
+                    return 1;
+            }   
+        }
+    }
+
     return 0;
 }
 

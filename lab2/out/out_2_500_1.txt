@@ -1,0 +1,5 @@
+A multiplicacao sequencial levou: 0.671180 ms
+A multiplicacao concorrente levou: 0.667336 ms
+O resultado do calculo esta correto
+A checagem do resultado levou: 0.285536 ms
+A liberacao de memoria levou: 0.000170 ms
