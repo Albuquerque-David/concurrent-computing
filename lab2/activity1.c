@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <time.h>
 #include "./libs/timer.h"
 
 float *mat1;
@@ -27,6 +28,10 @@ int main(int argc, char *argv[])
     pthread_t *tid;
     tArgs *args;
     double start, end, delta;
+    float randomNum;
+
+    srand((unsigned int)time(NULL));
+    randomNum = ((float)rand()/(float)(RAND_MAX) * 25.0);
 
     if (argc < 3)
     {
@@ -69,7 +74,7 @@ int main(int argc, char *argv[])
     }
 
     // Inicializacao das matrizes
-    initializeMatrix(2);
+    initializeMatrix(randomNum);
     
 
     // Multiplicacao de matrizes realizada de forma sequencial
