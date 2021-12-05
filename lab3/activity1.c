@@ -9,32 +9,24 @@ long long int numberOfElements;
 float sLim, iLim;
 int nthreads;
 
-typedef struct
-{
-    int id;
-    int start, end;
-} tArgs;
-
-float *initializeArray(int randomNumber);
-int *calculateOcurrencesSequentially();
+int initializeArray();
+int calculateOcurrencesSequentially();
 void *calculateOcurrencesConcurrently(void *arg);
-int checkMatrixMultiplication();
-void printMatrixs();
+int checkOcurrencesCalc(int seqOcurrences, int concOcurrences);
+void printArraysAndOcurrences(int seqOcurrences, int concOcurrences);
 
 int main(int argc, char *argv[])
 {
     pthread_t *tid;
-    tArgs *args;
     double start, end, delta;
     int seqOcurrences, concOcurrences;
-    float randomNum;
+    int *returnValue;
 
     srand((unsigned int)time(NULL));
-    randomNum = ((float)rand()/(float)(RAND_MAX) * 25.0);
 
-    if (argc < 4)
+    if (argc < 5)
     {
-        printf("Digite: %s <numero de threads> <numero de elementos do vetor> <limite inferior> <limite superior>\n", argv[0]);
+        fprintf(stderr, "Digite: %s <numero de threads> <numero de elementos do vetor> <limite inferior> <limite superior>\n", argv[0]);
         return 1;
     }
 
@@ -51,8 +43,15 @@ int main(int argc, char *argv[])
 
     if (numberOfElements <= 0)
     {
-        fprintf(stderr,"Entre com um numero positivo de dimensão da matriz\n");
+        fprintf(stderr, "Entre com um numero positivo de numero de elementos do array\n");
         return 1;
+    }
+
+    if (iLim > sLim)
+    {
+        int aux = iLim;
+        iLim = sLim;
+        sLim = aux;
     }
 
     if (nthreads > numberOfElements)
@@ -61,7 +60,7 @@ int main(int argc, char *argv[])
     }
 
     // Inicializacao do array
-    initializeArray(randomNum);
+    initializeArray();
 
     // Calculo de ocorrencias do elemento no array realizada de forma sequencial
     GET_TIME(start);
@@ -75,29 +74,20 @@ int main(int argc, char *argv[])
     // Calculo da quantidade de aparicoes do elemento no array realizada de forma concorrente
     GET_TIME(start);
 
+    concOcurrences = 0;
+
     tid = (pthread_t *)malloc(sizeof(pthread_t) * nthreads);
     if (tid == NULL)
     {
-        puts("Erro ao alocar tid\n");
+        fprintf(stderr, "Erro ao alocar tid\n");
         return 2;
     }
 
-    args = (tArgs *)malloc(sizeof(tArgs) * nthreads);
-    if (args == NULL)
-    {
-        puts("Erro ao alocar args\n");
-        return 2;
-    }
-
-    for(int thread = 0; thread < nthreads; thread++) {
+    for(long int thread = 0; thread < nthreads; thread++) {
         
-        (args + thread)->start = thread * ((dim) / nthreads); // De onde a thread iniciará o calculo, alocando dinamicamente de acordo com a quantidade de threads e tamanho do array
-        (args + thread)->end = (thread * ((dim) / nthreads)) + ((dim) / nthreads); // Onde a thread terminará o calculo, alocando dinamicamente de acordo com a quantidade de threads e tamanho do array
-        (args + thread)->id = thread;
-        
-        if (pthread_create(tid + thread, NULL, multiplyMatrixsConcurrently, (void*) (args + thread))) {
-            printf("Erro ao criar threads para a funcao multiplyMatrixsConcurrently\n");
-            exit(-1);
+        if (pthread_create(tid + thread, NULL, calculateOcurrencesConcurrently, (void*) ( thread ))) {
+            fprintf(stderr, "Erro ao criar threads para a funcao calculateOcurrencesConcurrently\n");
+            return -1;
         } else {
             //printf("Thread criada com sucesso. Tid: %ld\n",*(tid + thread));
         }
@@ -106,12 +96,11 @@ int main(int argc, char *argv[])
 
     // Aguarda as threads finalizarem
     for (int thread = 0; thread < nthreads; thread++) {
-        if (pthread_join(*(tid + thread), NULL)) {
-            printf("Erro ao aguardar as threads terminarem a execução\n"); 
-            exit(-1); 
-        } else {
-            //printf("Thread finalizada com sucesso. Tid: %ld\n", *(tid + thread));
+        if (pthread_join(*(tid + thread), (void**) &returnValue)) {
+            fprintf(stderr, "Erro ao aguardar as threads terminarem a execução\n"); 
+            return -1;
         }
+        concOcurrences += *returnValue;
     }
 
     GET_TIME(end);
@@ -122,9 +111,9 @@ int main(int argc, char *argv[])
 
     GET_TIME(start);
 
-    int isWrong = checkMatrixMultiplication();
+    int isWrong = checkOcurrencesCalc(seqOcurrences, concOcurrences);
     if(isWrong){
-        printf("Erro no calculo da matriz\n");
+        printf("Erro no calculo de ocorrencias\n");
     } else {
         printf("O resultado do calculo esta correto\n");
     }
@@ -132,22 +121,24 @@ int main(int argc, char *argv[])
     GET_TIME(end);
     delta = end - start;
     printf("A checagem do resultado levou: %lf ms\n", delta);
+    //printArraysAndOcurrences(seqOcurrences, concOcurrences);
     
     //liberacao de memoria
     GET_TIME(start);
 
     free(arrayOfElements);
-    free(args);
     free(tid);
 
     GET_TIME(end);
     delta = end - start;
     printf("A liberacao de memoria levou: %lf ms\n", delta);
 
+
     return 0;
 }
 
-float *initializeArray(int randomNumber) {
+int initializeArray() {
+    float randomNum;
     arrayOfElements = (float *) malloc(sizeof(float) * numberOfElements);
     if (arrayOfElements == NULL) {
         fprintf(stderr,"Erro ao alocar array\n"); 
@@ -155,95 +146,65 @@ float *initializeArray(int randomNumber) {
     }
 
     for(int i = 0; i < numberOfElements; i++) {
-        arrayOfElements[i] = randomNumber;
+        randomNum = ((float)rand()/(float)(RAND_MAX) * (sLim * 2));
+        arrayOfElements[i] = randomNum;
     }
 
     return 0;
 }
 
-int *calculateOcurrencesSequentially() {
+int calculateOcurrencesSequentially() {
 
-    int ocurrencesLocal = 0;
+    int localOcurrences = 0;
 
     for(int i = 0; i < numberOfElements; i++) {
-        if (iLim < arrayOfElements[i] < sLim) {
-            ocurrencesLocal;
+        if (iLim < arrayOfElements[i] && arrayOfElements[i] < sLim) {
+            localOcurrences++;
         }
     }
 
-    return ocurrencesLocal;
+    return localOcurrences;
 }
 
 void *calculateOcurrencesConcurrently(void *arg)
 {
-    int start, end;
-    tArgs *args = (tArgs *) arg;
+    long long int start, end;
+    long int id = (long int) arg;
     int *localOcurrences;
-    start = args->start;
-    end = args->end;
+    start = id * ((numberOfElements) / nthreads);
+    end = (id * ((numberOfElements) / nthreads)) + ((numberOfElements) / nthreads);
 
+    localOcurrences = (int*) malloc(sizeof(int));
+    if(localOcurrences==NULL) {
+        exit(1);
+    }
     *localOcurrences = 0;
     
     for(int i = start; i < end; i++) {
-        if (iLim < arrayOfElements[i] < sLim) {
-            *localOcurrences++;
+        if (iLim < arrayOfElements[i] && arrayOfElements[i] < sLim) {
+            *localOcurrences += 1;
         }
-            
     }
 
     pthread_exit((void *) localOcurrences);
 }
 
-int checkMatrixMultiplication(){
+int checkOcurrencesCalc(int seqOcurrences, int concOcurrences){
 
-    for(int i = 0; i < dim; i++) {
-        for(int j = 0; j < dim; j++) {
-            for(int k = 0; k < dim; k++) {
-                if(matSequential[i * dim + j] != matConcurrent[i * dim + j])
-                    return 1;
-            }   
-        }
-    }
+    if(seqOcurrences != concOcurrences) {
+        return 1;
+    }   
 
     return 0;
 }
 
-void printMatrixs() {
-    for(int i = 0; i < dim; i++){
-        for(int j = 0; j < dim; j++) {
-            printf("%.1f ", mat1[i * dim + j]);
-        }
-        printf("\n");
+void printArraysAndOcurrences(int seqOcurrences, int concOcurrences) {
+    for(int i = 0; i < numberOfElements; i++) {
+        printf("[%.2f] ", arrayOfElements[i]);
     }
 
-    printf("--------\n\n");
+    printf("\n");
 
-    for(int i = 0; i < dim; i++){
-        for(int j = 0; j < dim; j++) {
-            printf("%.1f ", mat2[i * dim + j]);
-        }
-        printf("\n");
-    }
-
-    printf("--------\n\n");
-
-
-    for(int i = 0; i < dim; i++){
-        for(int j = 0; j < dim; j++) {
-            printf("%.1f ", matSequential[i * dim + j]);
-        }
-        printf("\n");
-    }
-
-    printf("--------\n\n");
-
-    for(int i = 0; i < dim; i++){
-        for(int j = 0; j < dim; j++) {
-            printf("%.1f ", matConcurrent[i * dim + j]);
-        }
-        printf("\n");
-    }
-
-    printf("--------\n\n");
-
+    printf("Ocorrencias sequencial: %d\n", seqOcurrences);
+    printf("Ocorrencias concorrente: %d\n", concOcurrences);
 }
