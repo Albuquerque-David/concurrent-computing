@@ -1,0 +1,5 @@
+O calculo sequencial de ocorrencias levou: 7.006909 ms
+O calculo concorrente de ocorrencias levou: 3.498885 ms
+O resultado do calculo esta correto
+A checagem do resultado levou: 0.000000 ms
+A liberacao de memoria levou: 0.092006 ms
