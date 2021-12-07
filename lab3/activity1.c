@@ -9,11 +9,11 @@ long long int numberOfElements;
 float sLim, iLim;
 int nthreads;
 
-int initializeArray();
-int calculateOcurrencesSequentially();
-void *calculateOcurrencesConcurrently(void *arg);
-int checkOcurrencesCalc(int seqOcurrences, int concOcurrences);
-void printArraysAndOcurrences(int seqOcurrences, int concOcurrences);
+int initializeArray(); // Funcao responsavel por inicializar o array
+int calculateOcurrencesSequentially(); // Funcao responsavel por calcular de forma sequencial a quantiadde de ocorrencias no array
+void *calculateOcurrencesConcurrently(void *arg); // Funcao responsavel por calcular de forma concorrente a quantiadde de ocorrencias no array
+int checkOcurrencesCalc(int seqOcurrences, int concOcurrences); // Funcao responsavel por fazer a checagem final dos resultados da quantidade de ocorrencias
+void printArraysAndOcurrences(int seqOcurrences, int concOcurrences); // Funcao auxiliar para printar os arrays e as ocorrencias
 
 int main(int argc, char *argv[])
 {
@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
 
     srand((unsigned int)time(NULL));
 
+    // Rotinas de checagem dos argumentos passados ao programa
     if (argc < 5)
     {
         fprintf(stderr, "Digite: %s <numero de threads> <numero de elementos do vetor> <limite inferior> <limite superior>\n", argv[0]);
@@ -71,7 +72,7 @@ int main(int argc, char *argv[])
     delta = end - start;
     printf("O calculo sequencial de ocorrencias levou: %lf ms\n", delta);
 
-    // Calculo da quantidade de aparicoes do elemento no array realizada de forma concorrente
+    // Calculo de ocorrencias do elemento no array realizada de forma concorrente
     GET_TIME(start);
 
     concOcurrences = 0;
@@ -84,7 +85,7 @@ int main(int argc, char *argv[])
     }
 
     for(long int thread = 0; thread < nthreads; thread++) {
-        
+        // Criacao das threads
         if (pthread_create(tid + thread, NULL, calculateOcurrencesConcurrently, (void*) ( thread ))) {
             fprintf(stderr, "Erro ao criar threads para a funcao calculateOcurrencesConcurrently\n");
             return -1;
@@ -96,6 +97,7 @@ int main(int argc, char *argv[])
 
     // Aguarda as threads finalizarem
     for (int thread = 0; thread < nthreads; thread++) {
+        // Aguardo da finalizacao das threads
         if (pthread_join(*(tid + thread), (void**) &returnValue)) {
             fprintf(stderr, "Erro ao aguardar as threads terminarem a execução\n"); 
             return -1;
@@ -107,8 +109,7 @@ int main(int argc, char *argv[])
     delta = end - start;
     printf("O calculo concorrente de ocorrencias levou: %lf ms\n", delta);
 
-    // checando resultado
-
+    // Checagem dos resultados
     GET_TIME(start);
 
     int isWrong = checkOcurrencesCalc(seqOcurrences, concOcurrences);
@@ -123,7 +124,7 @@ int main(int argc, char *argv[])
     printf("A checagem do resultado levou: %lf ms\n", delta);
     //printArraysAndOcurrences(seqOcurrences, concOcurrences);
     
-    //liberacao de memoria
+    // Liberacao de memoria
     GET_TIME(start);
 
     free(arrayOfElements);
