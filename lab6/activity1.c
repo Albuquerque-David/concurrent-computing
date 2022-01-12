@@ -8,34 +8,43 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define NTHREADS 9
-
-void barreira(int nthreads);
-void *tarefa(void *arg);
-void checkResult();
-
 /* Variaveis globais */
 int sLim, iLim;
 int bloqueadas = 0;
-int vetor[NTHREADS];
+int *vetor;
+int nthreads;
+
+void barreira(int nthreads);
+void *tarefa(void *arg);
+
 pthread_mutex_t x_mutex;
 pthread_cond_t x_cond;
 
 /* Funcao principal */
 int main(int argc, char *argv[])
 {
-    pthread_t threads[NTHREADS];
-    int id[NTHREADS];
-    int *returnValue;
-    int vetorResult[NTHREADS];
-
+    
     srand((unsigned int)time(NULL));
     iLim = 0;
     sLim = 10;
     int randomNum;
 
+    if (argc < 2)
+    {
+        fprintf(stderr, "Digite: %s <numero de threads> \n", argv[0]);
+        return 1;
+    }
+
+    nthreads = atoi(argv[1]);
+    vetor = (int *) malloc(sizeof(int) * nthreads);
+
+    pthread_t threads[nthreads];
+    int id[nthreads];
+    int *returnValue;
+    int vetorResult[nthreads];
+
     /* Inicializa o vetor com valores aleatorios */
-    for (int i = 0; i < NTHREADS; i++) {
+    for (int i = 0; i < nthreads; i++) {
         randomNum = rand() % sLim;
         vetor[i] = randomNum;
     }
@@ -45,14 +54,14 @@ int main(int argc, char *argv[])
     pthread_cond_init(&x_cond, NULL);
 
     /* Cria as threads */
-    for (int i = 0; i < NTHREADS; i++)
+    for (int i = 0; i < nthreads; i++)
     {
         id[i] = i;
         pthread_create(&threads[i], NULL, tarefa, (void *)&id[i]);
     }
 
     /* Espera todas as threads completarem */
-    for (int i = 0; i < NTHREADS; i++)
+    for (int i = 0; i < nthreads; i++)
     {
         pthread_join(threads[i], (void**) &returnValue);
         vetorResult[i] = *returnValue;
@@ -65,7 +74,7 @@ int main(int argc, char *argv[])
     int somaResult = vetorResult[0];
     int isWrong = 0;
 
-    for(int i = 0; i < NTHREADS; i++) {
+    for(int i = 0; i < nthreads; i++) {
         if(vetorResult[i] != somaResult) {
             isWrong = 1;
         }
@@ -108,21 +117,21 @@ void *tarefa(void *arg)
     soma = (int*) malloc(sizeof(int));
     *soma = 0;
 
-    for (int passo = 0; passo < NTHREADS; passo++)
+    for (int passo = 0; passo < nthreads; passo++)
     {        
-        for (int i = 0; i < NTHREADS; i++) {
+        for (int i = 0; i < nthreads; i++) {
             *soma += vetor[i];
         }
 
         // Sincronizacao condicional
         printf("Thread %d terminou a soma %d. Iteracao: %d.\n", id, *soma, passo);
-        barreira(NTHREADS);
+        barreira(nthreads);
         pthread_mutex_lock(&x_mutex);
         int randomNum = rand() % sLim;
         vetor[id] = randomNum;
         // Preenche com novo valor aleatório
         pthread_mutex_unlock(&x_mutex);
-        barreira(NTHREADS);
+        barreira(nthreads);
     }
     pthread_exit((void *) soma);
 }
