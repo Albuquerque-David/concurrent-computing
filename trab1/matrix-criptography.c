@@ -5,8 +5,8 @@
 #include "./libs/timer.h"
 
 void readMatrix();
-void convertMessageToNumberMatrix();
-void convertNumberMatrixToText();
+int* convertMessageToNumberMatrix(char* message, int size);
+char* convertNumberMatrixToText(int* matrixMessage, int size);
 void calculateReverseMatrix();
 char* readMessage(char *filename);
 void cryptographMessage();
@@ -21,6 +21,7 @@ float *mat2;
 float *matSequential;
 float *matConcurrent;
 int nthreads;
+int size_message;
 
 typedef struct
 {
@@ -35,6 +36,10 @@ int main(int argc, char *argv[])
     tArgs *args;
     double start, end, delta;
     char* filename;
+    char* message;
+    char* textMessage;
+    int* matrixMessage;
+
 
     if (argc < 3)
     {
@@ -51,7 +56,16 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    readMessage(filename);
+    message = readMessage(filename);
+    matrixMessage = convertMessageToNumberMatrix(message, size_message);
+    printf("MENSAGEM EM NUMEROS: \n\n");
+    for(int i = 0; i < 25; i++) {
+        printf("%d ", matrixMessage[i]);
+    }
+    printf("\n\n");
+    printf("MENSAGEM EM TEXTO: \n\n");
+    textMessage = convertNumberMatrixToText(matrixMessage, size_message);
+    printf("%s \n\n", textMessage);
 
     return 0;
 }
@@ -59,7 +73,7 @@ int main(int argc, char *argv[])
 char* readMessage(char *filename)
 {
 
-    char *buffer = NULL;
+    char *message = NULL;
     int string_size, read_size;
     FILE *file = fopen(filename, "r");
 
@@ -73,21 +87,61 @@ char* readMessage(char *filename)
         fseek(file, 0, SEEK_END);
         string_size = ftell(file);
         rewind(file);
-        buffer = (char *)malloc(sizeof(char) * (string_size + 1));
-        read_size = fread(buffer, sizeof(char), string_size, file);
+        message = (char *)malloc(sizeof(char) * (string_size + 1));
+        read_size = fread(message, sizeof(char), string_size, file);
 
-        buffer[string_size] = '\0';
+        message[string_size] = '\0';
 
         if (string_size != read_size)
         {
-            free(buffer);
-            buffer = NULL;
+            free(message);
+            message = NULL;
         }
 
         fclose(file);
     }
+    size_message = string_size;
+    return message;
+}
 
-    printf("%s", buffer);
+int* convertMessageToNumberMatrix(char* message, int size) {
 
-    return buffer;
+    int i;
+    int *numberMessage;
+
+    numberMessage = (int *)malloc(sizeof(int) * size);
+    i = 0;
+
+    while(message[i] != '\0') {
+
+        if(message[i] >= 65 && message[i] <= 90) {
+            numberMessage[i] = message[i] - 65;
+            i++;
+            continue;
+        }
+
+        if(message[i] >= 97 && message[i] <= 122) {
+            numberMessage[i] = message[i] - 97;
+            i++;
+            continue;
+        }
+
+        numberMessage[i] = 92;
+        i++;
+
+    }
+
+    return numberMessage;
+}
+
+char* convertNumberMatrixToText(int* matrixMessage, int size) {
+    char *textMessage;
+
+    textMessage = (char *)malloc(sizeof(char) * size);
+
+    for(int i = 0; i < size; i++) {
+        textMessage[i] = matrixMessage[i] + 65;
+    }
+
+    return textMessage;
 }
