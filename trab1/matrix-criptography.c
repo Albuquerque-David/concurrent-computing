@@ -5,8 +5,8 @@
 #include "./libs/timer.h"
 
 void readMatrix();
-int* convertMessageToNumberMatrix(char* message, int size);
-char* convertNumberMatrixToText(int* matrixMessage, int size);
+void convertMessageToNumberMatrix(char** message);
+void convertNumberMatrixToText(char** matrixMessage);
 void calculateReverseMatrix();
 char* readMessage(char *filename);
 void cryptographMessage();
@@ -57,15 +57,16 @@ int main(int argc, char *argv[])
     }
 
     message = readMessage(filename);
-    matrixMessage = convertMessageToNumberMatrix(message, size_message);
+    printf("%s\n\n",message);
+    convertMessageToNumberMatrix(&message);
     printf("MENSAGEM EM NUMEROS: \n\n");
     for(int i = 0; i < 25; i++) {
-        printf("%d ", matrixMessage[i]);
+        printf("%d ", message[i]);
     }
     printf("\n\n");
     printf("MENSAGEM EM TEXTO: \n\n");
-    textMessage = convertNumberMatrixToText(matrixMessage, size_message);
-    printf("%s \n\n", textMessage);
+    convertNumberMatrixToText(&message);
+    printf("%s \n\n", message);
 
     return 0;
 }
@@ -104,44 +105,43 @@ char* readMessage(char *filename)
     return message;
 }
 
-int* convertMessageToNumberMatrix(char* message, int size) {
+void convertMessageToNumberMatrix(char** message) {
 
-    int i;
-    int *numberMessage;
-
-    numberMessage = (int *)malloc(sizeof(int) * size);
-    i = 0;
-
-    while(message[i] != '\0') {
-
-        if(message[i] >= 65 && message[i] <= 90) {
-            numberMessage[i] = message[i] - 65;
+    int i = 0;
+    while((*message)[i] != '\0') {
+        if ((*message)[i] >= 65 && ((*message)[i]) <= 90)
+        {
+            (*message)[i] -= 64;
             i++;
             continue;
         }
 
-        if(message[i] >= 97 && message[i] <= 122) {
-            numberMessage[i] = message[i] - 97;
+        if((*message)[i] >= 97 && (*message)[i] <= 122) {
+            (*message)[i] -= 96;
             i++;
             continue;
         }
 
-        numberMessage[i] = 92;
+        (*message)[i] = 35;
         i++;
 
     }
 
-    return numberMessage;
 }
 
-char* convertNumberMatrixToText(int* matrixMessage, int size) {
-    char *textMessage;
+void convertNumberMatrixToText(char** matrixMessage) {
 
-    textMessage = (char *)malloc(sizeof(char) * size);
+    int i = 0;
 
-    for(int i = 0; i < size; i++) {
-        textMessage[i] = matrixMessage[i] + 65;
+    while ((char)(*matrixMessage)[i] != (char)'\0') {
+
+        if ((*matrixMessage)[i] == 35)
+        {
+            i++;
+            continue;
+        }
+
+        (*matrixMessage)[i] += 64;
+        i++;
     }
-
-    return textMessage;
 }

@@ -1,1 +1,3 @@
 This is a secret message
+THIS IS NOT A secret
+MESSAGE
