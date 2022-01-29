@@ -43,8 +43,8 @@ int main(int argc, char *argv[])
 
     if (argc < 3)
     {
-        printf("Digite: %s <numero de threads> <arquivo a ser criptografado>\n", argv[0]);
-        return 1;
+        fprintf(stderr, "Digite: %s <numero de threads> <arquivo a ser criptografado>\n", argv[0]);
+        exit(EXIT_FAILURE);
     }
 
     nthreads = atoi(argv[1]);
@@ -52,21 +52,56 @@ int main(int argc, char *argv[])
 
     if (nthreads <= 0)
     {
-        printf("Entre com um numero positivo de threads\n");
-        exit(1);
+        fprintf(stderr, "Entre com um numero positivo de threads\n");
+        exit(EXIT_FAILURE);
     }
 
+    // --------------------------
+    // === Leitura do Arquivo ===
+    // --------------------------
+    GET_TIME(start);
+
     message = readMessage(filename);
-    printf("%s\n\n",message);
-    convertMessageToNumberMatrix(&message);
-    printf("MENSAGEM EM NUMEROS: \n\n");
-    for(int i = 0; i < 25; i++) {
-        printf("%d ", message[i]);
-    }
-    printf("\n\n");
-    printf("MENSAGEM EM TEXTO: \n\n");
+
+    GET_TIME(end);
+    delta = end - start;
+    printf("A leitura do arquivo levou: %lf ms\n", delta);
+
+    // -------------------------------------
+    // === Conversão do texto em números ===
+    // -------------------------------------
+
+    GET_TIME(start);
+
     convertNumberMatrixToText(&message);
-    printf("%s \n\n", message);
+
+    GET_TIME(end);
+    delta = end - start;
+    printf("A leitura do arquivo levou: %lf ms\n", delta);
+
+    // --------------------------------
+    // === Input de dados da matriz ===
+    // --------------------------------
+
+    // ---------------------------------
+    // === Cálculo da matriz inversa ===
+    // ---------------------------------
+
+    // --------------------------
+    // === Leitura do arquivo ===
+    // --------------------------
+
+    // --------------------------------------
+    // === Conversão dos números em texto ===
+    // --------------------------------------
+
+    GET_TIME(start);
+
+    convertNumberMatrixToText(&message);
+
+    GET_TIME(end);
+    delta = end - start;
+    printf("A conversao dos numeros em texto levou: %lf ms\n", delta);
 
     return 0;
 }
@@ -79,7 +114,7 @@ char* readMessage(char *filename)
     FILE *file = fopen(filename, "r");
 
     if(file == NULL){
-        perror("fopen");
+        fprintf(stderr, "Falha ao abrir o arquivo: %s\n", filename);
         exit(EXIT_FAILURE);
     }
 
