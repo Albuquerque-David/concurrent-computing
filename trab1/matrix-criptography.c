@@ -4,10 +4,11 @@
 #include <time.h>
 #include "./libs/timer.h"
 
-void readMatrix();
+void readMatrixKey();
+void readMatrixInverse();
 void convertMessageToNumberMatrix(char** message);
 void convertNumberMatrixToText(char** matrixMessage);
-void calculateReverseMatrix();
+int determinant(int* matrix, int dim);
 char* readMessage(char *filename);
 void cryptographMessage();
 void decryptographMessage();
@@ -16,12 +17,14 @@ void *decryptographMessageConcurrently(void *arg);
 void checkResults();
 void printMessage();
 
-float *mat1;
-float *mat2;
-float *matSequential;
-float *matConcurrent;
+
+int *matSequential;
+int *matConcurrent;
 int nthreads;
 int size_message;
+int *matrixKey;
+int *matrixInverse;
+int dim;
 
 typedef struct
 {
@@ -31,6 +34,7 @@ typedef struct
 
 int main(int argc, char *argv[])
 {
+    
 
     pthread_t *tid;
     tArgs *args;
@@ -59,6 +63,7 @@ int main(int argc, char *argv[])
     // --------------------------
     // === Leitura do Arquivo ===
     // --------------------------
+    
     GET_TIME(start);
 
     message = readMessage(filename);
@@ -77,16 +82,21 @@ int main(int argc, char *argv[])
 
     GET_TIME(end);
     delta = end - start;
-    printf("A leitura do arquivo levou: %lf ms\n", delta);
+    printf("A conversao de texto em numeros levou: %lf ms\n", delta);
 
     // --------------------------------
     // === Input de dados da matriz ===
     // --------------------------------
-
-    // ---------------------------------
-    // === Cálculo da matriz inversa ===
-    // ---------------------------------
-
+    
+    readMatrixKey();
+    readMatrixInverse();
+    // print para teste
+    for (int i = 0; i < dim; i++) {
+        for (int j = 0; j < dim; j++) {
+            printf("%d ", matrixKey[i*dim+j]);
+        }
+        printf("\n");
+    }
     // --------------------------
     // === Leitura do arquivo ===
     // --------------------------
@@ -180,3 +190,31 @@ void convertNumberMatrixToText(char** matrixMessage) {
         i++;
     }
 }
+
+void readMatrixKey() {
+    int i = 0, j = 0;
+    printf("Para criptografar sua mensagem, eh preciso de uma matriz chave. Entre com a dimensao da sua matriz quadrada:\n");
+    scanf("%d", &dim);
+    printf("Agora, digite um a um cada elemento inteiro da matriz:\n");
+    matrixKey = (int *) malloc(sizeof(int) * dim * dim);
+    for (i = 0; i < dim; i++) {
+        for (j = 0; j < dim; j++) {
+            scanf("%d", &matrixKey[i*dim+j]);
+        }
+    }
+}
+
+
+void readMatrixInverse() {
+    int i = 0, j = 0;
+    printf("Agora, digite um a um cada elemento inteiro da matriz inversa de sua chave:\n");
+    matrixInverse = (int *) malloc(sizeof(int) * dim * dim);
+    for (i = 0; i < dim; i++) {
+        for (j = 0; j < dim; j++) {
+            scanf("%d", &matrixInverse[i*dim+j]);
+        }
+    }
+    
+}
+
+   
