@@ -112,7 +112,6 @@ int main(int argc, char *argv[])
     // -------------------------------
     // === Criptografa Concorrente ===
     // -------------------------------
-    printf("ta de sacanagem q n chega aqui\n");
     tid = (pthread_t *)malloc(sizeof(pthread_t) * nthreads);
     if (tid == NULL)
     {
