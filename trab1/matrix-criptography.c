@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include<string.h>
 #include <time.h>
 #include "./libs/timer.h"
 
@@ -28,6 +29,7 @@ int *matrixInverse;
 int dim;
 int *matrixMessage;
 char *message;
+char *messageToCheck;
 int bloqueadas = 0;
 
 typedef struct
@@ -74,6 +76,7 @@ int main(int argc, char *argv[])
     GET_TIME(start);
 
     message = readMessage(filename);
+    messageToCheck = readMessage(filename);
 
     GET_TIME(end);
     delta = end - start;
@@ -94,7 +97,7 @@ int main(int argc, char *argv[])
     // print para teste
     for (int j = 0; j < size_message; j++)
     {
-        //printf("%d ", message[j]);
+        printf("%d ", message[j]);
     }
     printf("\n");
     // --------------------------------
@@ -129,7 +132,7 @@ int main(int argc, char *argv[])
     cryptographMessage(message);
     for (int i = 0; i < size_message; i++)
     {
-        //printf("%d ", cryptoSequencial[i]);
+        printf("%d ", cryptoSequencial[i]);
     }
     GET_TIME(end);
     delta = end - start;
@@ -142,12 +145,19 @@ int main(int argc, char *argv[])
     decryptographMessage();
     for (int i = 0; i < size_message; i++)
     {
-        //printf("%d ", decryptoSequencial[i]);
+        printf("%d ", decryptoSequencial[i]);
     }
     GET_TIME(end);
     delta = end - start;
-    printf("A descriptografa sequencial levou: %lf ms\n", delta);
+    printf("A descriptografia sequencial levou: %lf ms\n", delta);
 
+    convertNumberMatrixToText(&decryptoSequencial);
+
+    for (int j = 0; j < size_message; j++)
+    {
+        printf("%c ", message[j]);
+    }
+    printf("\n%s", message);
     // -------------------------------
     // === Criptografa Concorrente ===
     // -------------------------------
@@ -292,6 +302,9 @@ int main(int argc, char *argv[])
 
     free(tid);
 
+    checkResults(cryptoSequencial, messageToCheck);
+    checkResults(message, messageToCheck);
+
     return 0;
 }
 
@@ -353,7 +366,6 @@ void convertMessageToNumberMatrix(char **message)
 
         (*message)[i] = 35;
         i++;
-        //printf("M%c", (*message)[i]);
     }
 }
 
@@ -536,5 +548,17 @@ void barreira(int nthreads)
         pthread_cond_wait(&x_cond, &x_mutex);
     }
     pthread_mutex_unlock(&x_mutex); //fim secao critica
+}
+
+void checkResults(char* decryptedMessage, char* messageToCheck) 
+{
+    if (strcmp(decryptedMessage, messageToCheck) == 0)
+    {
+        printf("Resultado correto!\n");
+    }
+    else {
+        printf("ERRO! O resultado nao eh o esperado");
+    }
+    
 }
             
