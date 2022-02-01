@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
     // print para teste
     for (int j = 0; j < size_message; j++)
     {
-        printf("%d ", message[j]);
+        //printf("%d ", message[j]);
     }
     printf("\n");
     // --------------------------------
@@ -121,6 +121,32 @@ int main(int argc, char *argv[])
         }
         printf("\n");
     }
+
+    // ------------------------------
+    // === Criptografa Sequencial ===
+    // ------------------------------
+    GET_TIME(start);
+    cryptographMessage(message);
+    for (int i = 0; i < size_message; i++)
+    {
+        //printf("%d ", cryptoSequencial[i]);
+    }
+    GET_TIME(end);
+    delta = end - start;
+    printf("A criptografa sequencial levou: %lf ms\n", delta);
+
+    // ----------------------------------
+    // === Descriptografia Sequencial ===
+    // ----------------------------------
+    GET_TIME(start);
+    decryptographMessage();
+    for (int i = 0; i < size_message; i++)
+    {
+        //printf("%d ", decryptoSequencial[i]);
+    }
+    GET_TIME(end);
+    delta = end - start;
+    printf("A descriptografa sequencial levou: %lf ms\n", delta);
 
     // -------------------------------
     // === Criptografa Concorrente ===
@@ -181,9 +207,8 @@ int main(int argc, char *argv[])
     printf("A criptografa concorrente levou: %lf ms\n", delta);
     for (int j = 0; j < size_message; j++)
     {
-        printf("%d ", message[j]);
+        //printf("%d ", message[j]);
     }
-    printf("\n\n");
 
     // ----------------------------------
     // === Descriptografa Concorrente ===
@@ -244,32 +269,14 @@ int main(int argc, char *argv[])
     printf("A descriptografia concorrente levou: %lf ms\n", delta);
     for (int j = 0; j < size_message; j++)
     {
-        printf("%d ", message[j]);
+        //printf("%d ", message[j]);
     }
-    printf("\n\n");
 
     /* Desaloca variaveis e termina */
     pthread_mutex_destroy(&x_mutex);
     pthread_cond_destroy(&x_cond);
 
-    // ------------------------------
-    // === Criptografa Sequencial ===
-    // ------------------------------
-    cryptographMessage(message);
-    for (int i = 0; i < size_message; i++)
-    {
-        printf("%d ", cryptoSequencial[i]);
-    }
-
-    printf("\n");
-    // ----------------------------------
-    // === Descriptografia Sequencial ===
-    // ----------------------------------
-    decryptographMessage();
-    for (int i = 0; i < size_message; i++)
-    {
-        printf("%d ", decryptoSequencial[i]);
-    }
+    
 
     // --------------------------------------
     // === Conversão dos números em texto ===
@@ -346,7 +353,7 @@ void convertMessageToNumberMatrix(char **message)
 
         (*message)[i] = 35;
         i++;
-        printf("M%c", (*message)[i]);
+        //printf("M%c", (*message)[i]);
     }
 }
 
@@ -382,7 +389,7 @@ void readMatrixKey()
     {
         for (j = 0; j < dim; j++)
         {
-            printf("i: %d j: %d dim %d total %d\n", i, j, dim, i * dim + j);
+            //printf("i: %d j: %d dim %d total %d\n", i, j, dim, i * dim + j);
             scanf("%d", &matrixKey[i * dim + j]);
         }
     }
