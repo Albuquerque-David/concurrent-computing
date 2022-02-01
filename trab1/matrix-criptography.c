@@ -18,8 +18,8 @@ void checkResults();
 void printMessage();
 void barreira(int nthreads);
 
-int *cryptoSequencial;
-int *decryptoSequencial;
+char *cryptoSequencial;
+char *decryptoSequencial;
 int *matConcurrent;
 int nthreads;
 int size_message;
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
     delta = end - start;
     printf("A leitura do arquivo levou: %lf ms\n", delta);
     //print para teste
-    printf("%s\n", message);
+    //printf("%s\n", message);
 
     // -------------------------------------
     // === Conversão do texto em números ===
@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
     {
         //printf("%d ", message[j]);
     }
-    printf("\n");
+    //printf("\n");
     // --------------------------------
     // === Input de dados da matriz ===
     // --------------------------------
@@ -108,18 +108,18 @@ int main(int argc, char *argv[])
     {
         for (int j = 0; j < dim; j++)
         {
-            printf("i: %d j: %d valor: %d ", i, j, matrixKey[i * dim + j]);
+            //printf("i: %d j: %d valor: %d ", i, j, matrixKey[i * dim + j]);
         }
-        printf("\n");
+        //printf("\n");
     }
 
     for (int i = 0; i < dim; i++)
     {
         for (int j = 0; j < dim; j++)
         {
-            printf("i: %d j: %d valor: %d ", i, j, matrixInverse[i * dim + j]);
+            //printf("i: %d j: %d valor: %d ", i, j, matrixInverse[i * dim + j]);
         }
-        printf("\n");
+        //printf("\n");
     }
 
     // ------------------------------
@@ -494,14 +494,27 @@ void *decryptographMessageConcurrently(void *arg)
 }
 
 void cryptographMessage(char* message) 
-{
+{   
+    char* aux = NULL;
     int rowsMessage = size_message/dim;     // esse calculo eh referente a matriz de mensagens dever ter o numero de linhas igual ao da matriz lida, para poder realizar a multiplicacao
-    cryptoSequencial = (int *) malloc(sizeof(int) * dim * rowsMessage);
+    cryptoSequencial = (char *) malloc(sizeof(char) * dim * rowsMessage);
+    aux = (char *) malloc(sizeof(char) * dim * rowsMessage);
+    int value = 0;
+
+    for (int i = 0; i < dim; i++){
+        for (int j = 0; j < rowsMessage; j++){
+            value = 0;
+            for (int x = 0; x < dim; x++){
+                value += matrixKey[i*dim+x] * message[x*rowsMessage+j];    // logica para multiplicar a linha da primeira matriz com cada uma das colunas da segunda matriz
+            }
+            aux[i*rowsMessage+j] = value;
+        }
+    }
 
     for (int i = 0; i < dim; i++){
         for (int j = 0; j < rowsMessage; j++){
             for (int x = 0; x < dim; x++){
-                cryptoSequencial[i*rowsMessage+j] += matrixKey[i*dim+x] * message[x*rowsMessage+j];    // logica para multiplicar a linha da primeira matriz com cada uma das colunas da segunda matriz
+                cryptoSequencial[i*rowsMessage+j] = aux[i*rowsMessage+j];
             }
         }
     }
@@ -509,16 +522,31 @@ void cryptographMessage(char* message)
 
 void decryptographMessage() 
 {
+    char* aux = NULL;
     int rowsMessage = size_message/dim;     // esse calculo eh referente a matriz de mensagens dever ter o numero de linhas igual ao da matriz lida, para poder realizar a multiplicacao
-    decryptoSequencial = (int *) malloc(sizeof(int) * dim * rowsMessage);
+    decryptoSequencial = (char *) malloc(sizeof(char) * dim * rowsMessage);
+    aux = (char *) malloc(sizeof(char) * dim * rowsMessage);
+    int value;
+
+    for (int i = 0; i < dim; i++){
+        for (int j = 0; j < rowsMessage; j++){
+            value = 0;
+            for (int x = 0; x < dim; x++){
+                value += matrixInverse[i*dim+x] * cryptoSequencial[x*rowsMessage+j];    // logica para multiplicar a linha da primeira matriz com cada uma das colunas da segunda matriz
+            }
+            aux[i*rowsMessage+j];
+        }
+    }
 
     for (int i = 0; i < dim; i++){
         for (int j = 0; j < rowsMessage; j++){
             for (int x = 0; x < dim; x++){
-                decryptoSequencial[i*rowsMessage+j] += matrixInverse[i*dim+x] * cryptoSequencial[x*rowsMessage+j];    // logica para multiplicar a linha da primeira matriz com cada uma das colunas da segunda matriz
+                decryptoSequencial[i*rowsMessage+j] = aux[i*rowsMessage+j];
             }
         }
     }
+
+
 }
 
 void barreira(int nthreads)
