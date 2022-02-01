@@ -5,8 +5,8 @@ do
   do
     for nthreads in 1 2 4
     do
-      echo "Calculando caso de teste ${i}: Texto: message${dim}.txt, Threads: ${nthreads}";
-      ./a.out ${nthreads} message${text}.txt > out/out_${i}_${dim}_${nthreads}.txt;
+      echo "Calculando caso de teste ${i}: Texto: message${text}.txt, Threads: ${nthreads}";
+      ./a.out ${nthreads} message${text}.txt > out/out_${i}_${text}_${nthreads}.txt <<<'2 2 1 1 1 1 -1 -1 2';
     done
   done
 done

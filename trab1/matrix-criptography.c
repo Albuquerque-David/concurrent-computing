@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
     // print para teste
     for (int j = 0; j < size_message; j++)
     {
-        printf("%d ", message[j]);
+        //printf("%d ", message[j]);
     }
     //printf("\n");
     // --------------------------------
@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
 
     readMatrixKey();
     readMatrixInverse();
-    // print para teste
+
     for (int i = 0; i < dim; i++)
     {
         for (int j = 0; j < dim; j++)
@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
     cryptographMessage(message);
     for (int i = 0; i < size_message; i++)
     {
-        printf("%d ", cryptoSequencial[i]);
+        //printf("%d ", cryptoSequencial[i]);
     }
     GET_TIME(end);
     delta = end - start;
@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
     decryptographMessage();
     for (int i = 0; i < size_message; i++)
     {
-        printf("%d ", decryptoSequencial[i]);
+        //printf("%d ", decryptoSequencial[i]);
     }
     GET_TIME(end);
     delta = end - start;
@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
 
     convertNumberMatrixToText(&decryptoSequencial);
 
-    printf("\n%s", decryptoSequencial);
+    //printf("\n%s\n", decryptoSequencial);
     // -------------------------------
     // === Criptografa Concorrente ===
     // -------------------------------
@@ -295,9 +295,11 @@ int main(int argc, char *argv[])
     GET_TIME(end);
     delta = end - start;
     printf("A conversao dos numeros em texto levou: %lf ms\n", delta);
-    printf("\n%s", message);
+    //printf("%s\n", message);
 
     free(tid);
+
+    //printf("\n%s\n", message);
  
     checkResults(message, messageToCheck);
 
@@ -388,10 +390,10 @@ void readMatrixKey()
 {
     int i = 0, j = 0;
 
-    printf("Para criptografar sua mensagem, eh preciso de uma matriz chave. Entre com a dimensao da sua matriz quadrada:\n");
+    //printf("Para criptografar sua mensagem, eh preciso de uma matriz chave. Entre com a dimensao da sua matriz quadrada:\n");
     scanf("%d", &dim);
     
-    printf("Agora, digite um a um cada elemento inteiro da matriz:\n");
+    //printf("Agora, digite um a um cada elemento inteiro da matriz:\n");
     matrixKey = (int *)malloc(sizeof(int) * dim * dim);
     for (i = 0; i < dim; i++)
     {
@@ -407,7 +409,7 @@ void readMatrixInverse()
 {
     int i = 0, j = 0;
 
-    printf("Agora, digite um a um cada elemento inteiro da matriz inversa de sua chave:\n");
+    //printf("Agora, digite um a um cada elemento inteiro da matriz inversa de sua chave:\n");
     matrixInverse = (int *)malloc(sizeof(int) * dim * dim);
     for (i = 0; i < dim; i++)
     {
