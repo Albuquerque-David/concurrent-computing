@@ -8,9 +8,8 @@ void readMatrixKey();
 void readMatrixInverse();
 void convertMessageToNumberMatrix(char** message);
 void convertNumberMatrixToText(char** matrixMessage);
-int determinant(int* matrix, int dim);
 char* readMessage(char *filename);
-void cryptographMessage();
+void cryptographMessage(char* message);
 void decryptographMessage();
 void *cryptographMessageConcurrently(void *arg);
 void *decryptographMessageConcurrently(void *arg);
@@ -18,7 +17,8 @@ void checkResults();
 void printMessage();
 
 
-int *matSequential;
+int *cryptoSequencial;
+int *decryptoSequencial;
 int *matConcurrent;
 int nthreads;
 int size_message;
@@ -78,12 +78,16 @@ int main(int argc, char *argv[])
 
     GET_TIME(start);
 
-    convertNumberMatrixToText(&message);
+    convertMessageToNumberMatrix(&message);
 
     GET_TIME(end);
     delta = end - start;
     printf("A conversao de texto em numeros levou: %lf ms\n", delta);
-
+    for (int i = 0; i < size_message; i++)
+    {
+        printf("%d ", message[i]);
+    }
+    
     // --------------------------------
     // === Input de dados da matriz ===
     // --------------------------------
@@ -97,6 +101,21 @@ int main(int argc, char *argv[])
         }
         printf("\n");
     }
+
+    cryptographMessage(message);
+    for (int i = 0; i < size_message; i++)
+    {
+        printf("%d ", cryptoSequencial[i]);
+    }
+
+    printf("\n");
+
+    decryptographMessage();
+    for (int i = 0; i < size_message; i++)
+    {
+        printf("%d ", decryptoSequencial[i]);
+    }
+    
     // --------------------------
     // === Leitura do arquivo ===
     // --------------------------
@@ -169,7 +188,7 @@ void convertMessageToNumberMatrix(char** message) {
 
         (*message)[i] = 35;
         i++;
-
+        printf("M%c", (*message)[i]);
     }
 
 }
@@ -193,8 +212,10 @@ void convertNumberMatrixToText(char** matrixMessage) {
 
 void readMatrixKey() {
     int i = 0, j = 0;
+
     printf("Para criptografar sua mensagem, eh preciso de uma matriz chave. Entre com a dimensao da sua matriz quadrada:\n");
     scanf("%d", &dim);
+    
     printf("Agora, digite um a um cada elemento inteiro da matriz:\n");
     matrixKey = (int *) malloc(sizeof(int) * dim * dim);
     for (i = 0; i < dim; i++) {
@@ -207,6 +228,7 @@ void readMatrixKey() {
 
 void readMatrixInverse() {
     int i = 0, j = 0;
+
     printf("Agora, digite um a um cada elemento inteiro da matriz inversa de sua chave:\n");
     matrixInverse = (int *) malloc(sizeof(int) * dim * dim);
     for (i = 0; i < dim; i++) {
@@ -214,7 +236,34 @@ void readMatrixInverse() {
             scanf("%d", &matrixInverse[i*dim+j]);
         }
     }
-    
+}
+
+void cryptographMessage(char* message) 
+{
+    int rowsMessage = size_message/dim;     // esse calculo eh referente a matriz de mensagens dever ter o numero de linhas igual ao da matriz lida, para poder realizar a multiplicacao
+    cryptoSequencial = (int *) malloc(sizeof(int) * dim * rowsMessage);
+
+    for (int i = 0; i < dim; i++){
+        for (int j = 0; j < rowsMessage; j++){
+            for (int x = 0; x < dim; x++){
+                cryptoSequencial[i*rowsMessage+j] += matrixKey[i*dim+x] * message[x*rowsMessage+j];    // logica para multiplicar a linha da primeira matriz com cada uma das colunas da segunda matriz
+            }
+        }
+    }
+}
+
+void decryptographMessage() 
+{
+    int rowsMessage = size_message/dim;     // esse calculo eh referente a matriz de mensagens dever ter o numero de linhas igual ao da matriz lida, para poder realizar a multiplicacao
+    decryptoSequencial = (int *) malloc(sizeof(int) * dim * rowsMessage);
+
+    for (int i = 0; i < dim; i++){
+        for (int j = 0; j < rowsMessage; j++){
+            for (int x = 0; x < dim; x++){
+                decryptoSequencial[i*rowsMessage+j] += matrixInverse[i*dim+x] * cryptoSequencial[x*rowsMessage+j];    // logica para multiplicar a linha da primeira matriz com cada uma das colunas da segunda matriz
+            }
+        }
+    }
 }
 
    
