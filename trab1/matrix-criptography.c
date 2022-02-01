@@ -153,11 +153,7 @@ int main(int argc, char *argv[])
 
     convertNumberMatrixToText(&decryptoSequencial);
 
-    for (int j = 0; j < size_message; j++)
-    {
-        printf("%c ", message[j]);
-    }
-    printf("\n%s", message);
+    printf("\n%s", decryptoSequencial);
     // -------------------------------
     // === Criptografa Concorrente ===
     // -------------------------------
@@ -299,10 +295,10 @@ int main(int argc, char *argv[])
     GET_TIME(end);
     delta = end - start;
     printf("A conversao dos numeros em texto levou: %lf ms\n", delta);
+    printf("\n%s", message);
 
     free(tid);
-
-    checkResults(cryptoSequencial, messageToCheck);
+ 
     checkResults(message, messageToCheck);
 
     return 0;
@@ -546,7 +542,7 @@ void decryptographMessage()
             for (int x = 0; x < dim; x++){
                 value += matrixInverse[i*dim+x] * cryptoSequencial[x*rowsMessage+j];    // logica para multiplicar a linha da primeira matriz com cada uma das colunas da segunda matriz
             }
-            aux[i*rowsMessage+j];
+            aux[i*rowsMessage+j] = value;
         }
     }
 
