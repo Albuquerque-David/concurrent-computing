@@ -16,6 +16,7 @@ void *cryptographMessageConcurrently(void *arg);
 void *decryptographMessageConcurrently(void *arg);
 void checkResults();
 void printMessage();
+void barreira(int nthreads);
 
 int *matSequential;
 int *matConcurrent;
@@ -26,12 +27,16 @@ int *matrixInverse;
 int dim;
 int *matrixMessage;
 char *message;
+int bloqueadas = 0;
 
 typedef struct
 {
     int id;
-    int start, end, line_size;
+    int line_start, line_end, line_size;
 } tArgs;
+
+pthread_mutex_t x_mutex;
+pthread_cond_t x_cond;
 
 int main(int argc, char *argv[])
 {
@@ -39,7 +44,7 @@ int main(int argc, char *argv[])
     tArgs *args;
     double start, end, delta;
     char *filename;
-    
+
     char *textMessage;
 
     if (argc < 3)
@@ -56,6 +61,10 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Entre com um numero positivo de threads\n");
         exit(EXIT_FAILURE);
     }
+
+    /* Inicilaiza o mutex (lock de exclusao mutua) e a variavel de condicao */
+    pthread_mutex_init(&x_mutex, NULL);
+    pthread_cond_init(&x_cond, NULL);
 
     // --------------------------
     // === Leitura do Arquivo ===
@@ -78,7 +87,6 @@ int main(int argc, char *argv[])
     GET_TIME(start);
 
     convertMessageToNumberMatrix(&message);
-
     GET_TIME(end);
     delta = end - start;
     printf("A conversao de texto em numeros levou: %lf ms\n", delta);
@@ -100,7 +108,15 @@ int main(int argc, char *argv[])
     {
         for (int j = 0; j < dim; j++)
         {
-            printf("i: %d j: %d valor: %d ", i,j,matrixKey[i * dim + j]);
+            printf("i: %d j: %d valor: %d ", i, j, matrixKey[i * dim + j]);
+        }
+        printf("\n");
+    }
+    for (int i = 0; i < dim; i++)
+    {
+        for (int j = 0; j < dim; j++)
+        {
+            printf("i: %d j: %d valor: %d ", i, j, matrixInverse[i * dim + j]);
         }
         printf("\n");
     }
@@ -133,12 +149,10 @@ int main(int argc, char *argv[])
 
     for (int thread = 0; thread < nthreads; thread++)
     {
-        (args + thread)->start = thread * ((size_message) / nthreads);
-        (args + thread)->end = (thread * ((size_message) / nthreads)) + ((size_message) / nthreads);
+        (args + thread)->line_start = thread * ((quantityLines) / nthreads);
+        (args + thread)->line_end = (thread * ((quantityLines) / nthreads)) + ((quantityLines) / nthreads);
         (args + thread)->line_size = sizeLinePerThread;
         (args + thread)->id = thread;
-        printf("thread %d: sizem %d nthreads %d dim %d\n", thread, size_message, nthreads, dim);
-        printf("thread %d: start %d end %d \n", thread, (args + thread)->start, (args + thread)->end);
 
         if (pthread_create(tid + thread, NULL, cryptographMessageConcurrently, (void *)(args + thread)))
         {
@@ -147,7 +161,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            printf("Thread criada com sucesso. Tid: %ld\n",*(tid + thread));
+            //printf("Thread criada com sucesso. Tid: %ld\n", *(tid + thread));
         }
     }
 
@@ -167,12 +181,79 @@ int main(int argc, char *argv[])
 
     GET_TIME(end);
     delta = end - start;
-    printf("A multiplicacao concorrente levou: %lf ms\n", delta);
+    printf("A criptografa concorrente levou: %lf ms\n", delta);
     for (int j = 0; j < size_message; j++)
     {
         printf("%d ", message[j]);
     }
     printf("\n\n");
+
+    // ----------------------------------
+    // === Descriptografa Concorrente ===
+    // ----------------------------------
+    tid = (pthread_t *)malloc(sizeof(pthread_t) * nthreads);
+    if (tid == NULL)
+    {
+        puts("Erro ao alocar tid\n");
+        return 2;
+    }
+
+    args = (tArgs *)malloc(sizeof(tArgs) * nthreads);
+    if (args == NULL)
+    {
+        puts("Erro ao alocar args\n");
+        return 2;
+    }
+
+    GET_TIME(start);
+
+    sizeLinePerThread = size_message / dim;
+    quantityLines = dim;
+
+    for (int thread = 0; thread < nthreads; thread++)
+    {
+        (args + thread)->line_start = thread * ((quantityLines) / nthreads);
+        (args + thread)->line_end = (thread * ((quantityLines) / nthreads)) + ((quantityLines) / nthreads);
+        (args + thread)->line_size = sizeLinePerThread;
+        (args + thread)->id = thread;
+
+        if (pthread_create(tid + thread, NULL, decryptographMessageConcurrently, (void *)(args + thread)))
+        {
+            fprintf(stderr, "Erro ao criar threads para a funcao decryptographMessageConcurrently\n");
+            exit(EXIT_FAILURE);
+        }
+        else
+        {
+            //printf("Thread criada com sucesso. Tid: %ld\n", *(tid + thread));
+        }
+    }
+
+    // Aguarda as threads finalizarem
+    for (int thread = 0; thread < nthreads; thread++)
+    {
+        if (pthread_join(*(tid + thread), NULL))
+        {
+            fprintf(stderr, "Erro ao aguardar as threads terminarem a execução\n");
+            exit(EXIT_FAILURE);
+        }
+        else
+        {
+            //printf("Thread finalizada com sucesso. Tid: %ld\n", *(tid + thread));
+        }
+    }
+
+    GET_TIME(end);
+    delta = end - start;
+    printf("A descriptografia concorrente levou: %lf ms\n", delta);
+    for (int j = 0; j < size_message; j++)
+    {
+        printf("%d ", message[j]);
+    }
+    printf("\n\n");
+
+    /* Desaloca variaveis e termina */
+    pthread_mutex_destroy(&x_mutex);
+    pthread_cond_destroy(&x_cond);
 
     // --------------------------------------
     // === Conversão dos números em texto ===
@@ -304,30 +385,101 @@ void readMatrixInverse()
 
 void *cryptographMessageConcurrently(void *arg)
 {
-
     int start, end, line_size;
     tArgs *args = (tArgs *)arg;
-    start = args->start;
-    end = args->end;
+    start = args->line_start;
+    end = args->line_end;
     line_size = args->line_size;
-    int initialValue;
-    int line = 1;
+    int value;
+    int columnAux;
+    char* aux = NULL;
 
-    for (int i = start; i < end; i++)
+    aux = (char *)malloc(sizeof(char) * (size_message + 1));
+    
+    for (int i = start; i < end; i++) // Linha da matriz da mensagem
     {
-        if (i >= ((dim / line * dim)))
-            initialValue = message[i];
-        for (int k = 0; k < dim; k++)
-        {
-           
-            message[i] += message[i] * matrixKey[(line*dim) + k];
-        }   
-        message[i] -= initialValue;
+        columnAux = 0;
+        for (int j = (line_size * i); j < (line_size * i) + line_size; j++) { //Cada casa da linha
+            value = 0;
+            for (int k = 0; k < dim; k++) // Linha da matriz chave
+            {
+                //printf("VOU FAZER O CALCULO: i: %d j: %d k: %d dim: %d message: %d matrixKey: %d Produto: %d j maluco: %d, k2 %d\n", i, j, k, dim, message[i], matrixKey[(i * dim) + k], message[i] * matrixKey[(i * dim) + k], columnAux + (k * line_size), (k * dim) + i);
+                value += message[columnAux + (k * line_size)] * matrixKey[(k * dim) + i];
+            }
+            //printf("Vou por o valor no message: %d j: %d value: %d\n", message[j],j, value);
+            aux[j] = value;
+            columnAux++;
+        }
+        
     }
 
+    barreira(nthreads);
+
+    for (int i = start; i < end; i++) {
+        for (int j = (line_size * i); j < (line_size * i) + line_size; j++) {
+            message[j] = aux[j];        
+        }
+    }
+    
     pthread_exit(NULL);
 }
 
 void *decryptographMessageConcurrently(void *arg)
 {
+    int start, end, line_size;
+    tArgs *args = (tArgs *)arg;
+    start = args->line_start;
+    end = args->line_end;
+    line_size = args->line_size;
+    int value;
+    int columnAux;
+    char* aux = NULL;
+
+    aux = (char *)malloc(sizeof(char) * (size_message + 1));
+    
+    for (int i = start; i < end; i++) // Linha da matriz da mensagem
+    {
+        columnAux = 0;
+        for (int j = (line_size * i); j < (line_size * i) + line_size; j++) { //Cada casa da linha
+            
+            value = 0;
+            for (int k = 0; k < dim; k++) // Linha da matriz inversa
+            {
+                //printf("VOU FAZER O CALCULO: i: %d j: %d k: %d dim: %d message: %d matrixKey: %d Produto: %d j maluco: %d, k2 %d\n", i, j, k, dim, message[i], matrixInverse[(i * dim) + k], message[i] * matrixInverse[(i * dim) + k], columnAux + (k * line_size), (k * dim) + i);
+                value += message[columnAux + (k * line_size)] * matrixInverse[(k * dim) + i];
+            }
+            //printf("Vou por o valor no message: %d j: %d value: %d\n", message[j],j, value);
+            aux[j] = value;
+            columnAux++;
+        }
+        
+    }
+
+    barreira(nthreads);
+
+    for (int i = start; i < end; i++) {
+        for (int j = (line_size * i); j < (line_size * i) + line_size; j++) {
+            message[j] = aux[j];        
+        }
+    }
+
+    pthread_exit(NULL);
 }
+
+void barreira(int nthreads)
+{
+    pthread_mutex_lock(&x_mutex); //inicio secao critica
+    if (bloqueadas == (nthreads - 1))
+    {
+        //ultima thread a chegar na barreira
+        pthread_cond_broadcast(&x_cond);
+        bloqueadas = 0;
+    }
+    else
+    {
+        bloqueadas++;
+        pthread_cond_wait(&x_cond, &x_mutex);
+    }
+    pthread_mutex_unlock(&x_mutex); //fim secao critica
+}
+            
