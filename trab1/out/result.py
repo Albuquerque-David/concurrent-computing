@@ -5,7 +5,7 @@ minSequentiallyDecryptography = []
 minConcurrentlyCryptography = []
 minConcurrentlyDecryptography = []
 for dim in (100000,1000000,10000000,100000000):
-  for nthreads in (1,2,4):
+  for nthreads in (1,2,3):
     minSequentiallyCryptographyValue = 1000
     minSequentiallyDecryptographyValue = 1000
     minConcurrentlyCryptographyValue = 1000
@@ -15,10 +15,6 @@ for dim in (100000,1000000,10000000,100000000):
       with open(fileName) as f:
         lines = f.readlines()
         lines = [line.split() for line in lines]
-        if(lines[7][-1] != 'correto!'):
-          print(lines[7][-1])
-          print(f'Erro no calculo {fileName}\n')
-          exit()
         minSequentiallyCryptographyValue = min(minSequentiallyCryptographyValue, float(lines[2][-2]))
         minSequentiallyDecryptographyValue = min(minSequentiallyDecryptographyValue, float(lines[3][-2]))
         minConcurrentlyCryptographyValue = min(minConcurrentlyCryptographyValue, float(lines[4][-2]))
@@ -206,7 +202,7 @@ yAxis.append(minConcurrentlyDecryptography[5])
 yAxis.append(minConcurrentlyDecryptography[8])
 yAxis.append(minConcurrentlyDecryptography[11])
 plt.plot(xAxis,yAxis)
-plt.title('Criptografia/Descriptografia Concorrente - 4 Thread - Tempos Mínimos')
+plt.title('Criptografia/Descriptografia Concorrente - 3 Thread - Tempos Mínimos')
 plt.xlabel('Quantidade de Caracteres')
 plt.ylabel('Tempo em ms')
 plt.legend(['Criptografa', 'Descriptografa'])
@@ -273,8 +269,8 @@ yAxis.append(minSequentiallyCryptography[3] / minConcurrentlyDecryptography[5])
 yAxis.append(minSequentiallyCryptography[6] / minConcurrentlyDecryptography[8])
 yAxis.append(minSequentiallyCryptography[9] / minConcurrentlyDecryptography[11])
 plt.plot(xAxis,yAxis)
-plt.title('Desempenho Criptografia/Descriptografia Concorrente - 4 Thread')
+plt.title('Desempenho Criptografia/Descriptografia Concorrente - 3 Thread')
 plt.xlabel('Quantidade de Caracteres')
-plt.ylabel('Tempo em ms')
+plt.ylabel('Ganho de Desempenho em %')
 plt.legend(['Criptografa', 'Descriptografa'])
 plt.show()

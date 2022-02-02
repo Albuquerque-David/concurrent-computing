@@ -146,6 +146,7 @@ int main(int argc, char *argv[])
 
     int sizeLinePerThread = size_message / dim;
     int quantityLines = dim;
+    
 
     for (int thread = 0; thread < nthreads; thread++)
     {
@@ -153,6 +154,7 @@ int main(int argc, char *argv[])
         (args + thread)->line_end = (thread * ((quantityLines) / nthreads)) + ((quantityLines) / nthreads);
         (args + thread)->line_size = sizeLinePerThread;
         (args + thread)->id = thread;
+
 
         if (pthread_create(tid + thread, NULL, cryptographMessageConcurrently, (void *)(args + thread)))
         {
@@ -359,10 +361,10 @@ void readMatrixKey()
 {
     int i = 0, j = 0;
 
-    printf("Para criptografar sua mensagem, eh preciso de uma matriz chave. Entre com a dimensao da sua matriz quadrada:\n");
+    //printf("Para criptografar sua mensagem, eh preciso de uma matriz chave. Entre com a dimensao da sua matriz quadrada:\n");
     scanf("%d", &dim);
     
-    printf("Agora, digite um a um cada elemento inteiro da matriz:\n");
+    //printf("Agora, digite um a um cada elemento inteiro da matriz:\n");
     matrixKey = (int *)malloc(sizeof(int) * dim * dim);
     for (i = 0; i < dim; i++)
     {
@@ -377,7 +379,7 @@ void readMatrixInverse()
 {
     int i = 0, j = 0;
 
-    printf("Agora, digite um a um cada elemento inteiro da matriz inversa de sua chave:\n");
+    //printf("Agora, digite um a um cada elemento inteiro da matriz inversa de sua chave:\n");
     matrixInverse = (int *)malloc(sizeof(int) * dim * dim);
     for (i = 0; i < dim; i++)
     {

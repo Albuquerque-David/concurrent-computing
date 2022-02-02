@@ -1,0 +1,8 @@
+A leitura do arquivo levou: 0.003146 ms
+A conversao de texto em numeros levou: 0.017041 ms
+A criptografa sequencial levou: 0.036501 ms
+A descriptografia sequencial levou: 0.016658 ms
+A criptografa concorrente levou: 0.015776 ms
+A descriptografia concorrente levou: 0.014059 ms
+A conversao dos numeros em texto levou: 0.003035 ms
+Resultado correto!
