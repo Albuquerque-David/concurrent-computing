@@ -9,9 +9,6 @@
 #include <semaphore.h>
 
 #define NTHREADS 5
-#define EXECUTE_START_THREADS 0
-#define EXECUTE_MIDDLE_THREADS 1
-#define EXECUTE_END_THREADS 2
 
 /* Variaveis globais */
 int x = 0;
